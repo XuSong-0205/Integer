@@ -424,32 +424,32 @@ public:
 
 
 	// 关系运算符重载
-	bool operator==(int x)const
+	bool operator==(int x)const noexcept
 	{
 		return *this == Integer(x);
 	}
 
-	bool operator!=(int x)const
+	bool operator!=(int x)const noexcept
 	{
 		return *this != Integer(x);
 	}
 
-	bool operator<=(int x)const
+	bool operator<=(int x)const noexcept
 	{
 		return *this <= Integer(x);
 	}
 
-	bool operator>=(int x)const
+	bool operator>=(int x)const noexcept
 	{
 		return *this >= Integer(x);
 	}
 
-	bool operator<(int x)const
+	bool operator<(int x)const noexcept
 	{
 		return *this < Integer(x);
 	}
 
-	bool operator>(int x)const
+	bool operator>(int x)const noexcept
 	{
 		return *this > Integer(x);
 	}
@@ -465,13 +465,13 @@ public:
 		return !(*this == n);
 	}
 
-	bool operator<=(const Integer& n)const
+	bool operator<=(const Integer& n)const noexcept
 	{
 		if (*this == n) return true;
 		return *this < n;
 	}
 
-	bool operator>=(const Integer& n)const
+	bool operator>=(const Integer& n)const noexcept
 	{
 		if (*this == n) return true;
 		return n < *this;
@@ -485,30 +485,30 @@ public:
 		else									return false;
 	}
 
-	bool operator>(const Integer& n)const
+	bool operator>(const Integer& n)const noexcept
 	{
 		return n < *this;
 	}
 
 	// 逻辑运算符重载
-	bool operator&&(int x)const
+	bool operator&&(int x)const noexcept
 	{
 		return *this && Integer(x);
 	}
 
-	bool operator||(int x)const
+	bool operator||(int x)const noexcept
 	{
 		return *this || Integer(x);
 	}
 
-	bool operator&&(const Integer& n)const
+	bool operator&&(const Integer& n)const noexcept
 	{
 		if (*this == 0) return false;
 		else if (n == 0) return false;
 		else return true;
 	}
 
-	bool operator||(const Integer& n)const
+	bool operator||(const Integer& n)const noexcept
 	{
 		if (*this != 0) return true;
 		else return n != 0;
@@ -577,13 +577,13 @@ public:
 
 
 	// 一元逻辑运算符重载
-	friend bool operator!(const Integer& n)
+	friend bool operator!(const Integer& n) noexcept
 	{
 		return n == 0;
 	}
 
 	// 一元正负号重载
-	friend Integer operator+(const Integer& n)
+	friend Integer operator+(const Integer& n) noexcept
 	{
 		Integer tInt(n);
 		tInt.sign = '+';
@@ -591,7 +591,7 @@ public:
 		return tInt;
 	}
 
-	friend Integer operator-(const Integer& n)
+	friend Integer operator-(const Integer& n) noexcept
 	{
 		Integer tInt(n);
 		tInt.sign = n < 0 ? '+' : '-';
