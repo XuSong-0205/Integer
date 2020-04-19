@@ -16,16 +16,7 @@ private:
 	string num;					// 该数字的数值形式
 	char sign = '+';			// 该数字的符号 '+' '-'
 
-	/**
-	 * 比较该数的绝对值是否小于参数的绝对值
-	 */
-	bool less(const Integer& n)const noexcept
-	{
-		if (num.size() < n.num.size()) return true;
-		else if (num.size() > n.num.size()) return false;
-		else return num < n.num;
-	}
-
+	
 	/**
 	 * 此构造函数接收一个表示数字的字符串，一个该数字的符号
 	 * 该字符串表示的数字，低位在前，高位在后
@@ -41,7 +32,7 @@ private:
 	 */
 	Integer add(const Integer& n)const
 	{
-		Integer tInt(*this);
+		Integer tInt(this->num, '+');
 		int i = 0;
 		int j = 0;
 		const int len1 = tInt.num.size();
@@ -49,7 +40,7 @@ private:
 		int sum = 0;
 		int carry = 0;
 
-		while (i < len1 && j < len2 || carry)
+		while (i < len1 || j < len2 || carry)
 		{
 			sum = (i < len1 ? tInt.num.at(i) : 0) + (j < len2 ? n.num.at(j) : 0) + carry;
 			carry = sum / 10;
@@ -70,7 +61,7 @@ private:
 	 */
 	Integer sub(const Integer& n)const
 	{
-		Integer tInt(*this);
+		Integer tInt(this->num, '+');
 		int i = 0;
 		int j = 0;
 		const int len1 = tInt.num.size();
@@ -78,7 +69,7 @@ private:
 		int diff = 0;					// 某位的差
 		int borrow = 0;					// 借位
 
-		while (i < len1 && j < len2 || borrow)
+		while (i < len1 && j < len2 )
 		{
 			diff = (i < len1 ? tInt.num.at(i) : 0) - (j < len2 ? n.num.at(j) : 0) - borrow;
 			borrow = diff < 0 ? 1 : 0;
@@ -87,6 +78,14 @@ private:
 
 			++i;
 			++j;
+		}
+
+		// 去除最高位无用的 0
+		int t = tInt.num.back();
+		while (!t)
+		{
+			tInt.num.pop_back();
+			t = tInt.num.back();
 		}
 
 		return tInt;
@@ -145,11 +144,58 @@ private:
 
 	}
 
+	/**
+	 * 统一进行加减法运算的调配工作
+	 * 调用前应将参数和运算符的多余符号化简
+	 * 调用者与参数是加法连接的
+	 * 具体执行加法还是减法，决定于两者的符号
+	 */
+	Integer deploy(const Integer& n)const
+	{
+		if (sign == n.sign)			// 符号相同，做加法运算
+		{
+			if (sign == '+')		return  add(n);
+			else					return -add(n);
+		}
+		else						// 符号不同，做减法运算
+		{
+			if (less(n))			// 判断两数绝对值大小，只能进行绝对值大的减去绝对值小的
+			{
+				if (sign == '+')	return -n.sub(*this);
+				else				return	n.sub(*this);
+			}
+			else if (n.less(*this))
+			{
+				if (sign == '+')	return sub(n);
+				else				return -sub(n);
+			}
+			else
+			{
+									return Integer(0);
+			}
+		}
+
+		return Integer(0);
+	}
+
+	/**
+	 * 比较该数的绝对值是否小于参数的绝对值
+	 */
+	bool less(const Integer& n)const noexcept
+	{
+		if (num.size() < n.num.size())		return true;
+		else if (num.size() > n.num.size()) return false;
+		else								return num < n.num;
+	}
+
+
 public:
 	// 默认/单参数构造函数
 	Integer(int x = 0)
 	{
 		sign = x < 0 ? '-' : '+';
+		x = abs(x);
+
 		if (!x)
 		{
 			num += '\000';
@@ -249,7 +295,7 @@ public:
 	}
 
 	// 析构函数
-	~Integer() {}
+	~Integer() = default;
 
 
 
@@ -277,39 +323,9 @@ public:
 	/**
 	 * 大数加法
 	 */
-	Integer operator+(const Integer& n)const
+	Integer operator+(const Integer& n)const 
 	{
-		// 两数符号相同做加法运算
-		//  1 +  3 = 4
-		// -1 + -3 = -(1 + 3) = -4
-		// 两数符号不同则做减法
-		//  1 + -3 = -(3 - 1) = -2
-		// -1 +  3 =   3 - 1  =  2
-		//  3 + -1 =  3 -  1  =  2
-		// -3 +  1 = -(3 - 1) = -2
-
-		if (sign == n.sign)		// 符号相同做加法
-		{
-			if (sign == '+') return add(n);				//  1 +  3 = 4
-			else return -add(n);						// -1 + -3 = -(1 + 3) = -4
-		}
-		else					// 符号不同做减法
-		{
-			if (less(n))
-			{
-				if (sign == '+') return -n.sub(*this);	//  1 + -3 = -(3 - 1) = -2
-				else return n.sub(*this);				// -1 +  3 =   3 - 1  =  2
-			}
-			else if (n.less(*this))
-			{
-				if (sign == '+') return sub(n);			//  3 + -1 =  3 -  1  =  2
-				else return -sub(n);					// -3 +  1 = -(3 - 1) = -2
-			}
-			else				// 符号不同且绝对值相等
-			{
-				return Integer("0", '+');				// -x + x 或 x + -x
-			}
-		}
+		return deploy(n);
 	}
 
 	/**
@@ -317,37 +333,8 @@ public:
 	 */
 	Integer operator-(const Integer& n)const
 	{
-		// 两数异号做加法
-		//  1 - -3 =    1 + 3  =  4
-		// -1 -  3 =  -(1 + 3) = -4
-		// 两数同号做减法
-		// -1 - -3 = - 1 + 3  =  3 - 1 = 2
-		//  1 -  3 = -(3 - 1) = -2
-		// -3 - -1 = -3 + 1 = -(3 - 1) = -2
-		//  3 -  1 = 2
-
-		if (sign != n.sign)	// 符号不同
-		{
-			if (n.sign == '-') return add(n);				//  1 - -3 =    1 + 3  =  4
-			else return -add(n);							// -1 -  3 =  -(1 + 3) = -4
-		}
-		else				// 符号相同
-		{
-			if (less(n))			// *this 的绝对值小于 n 的绝对值
-			{
-				if (sign == '-') return n.sub(*this);		// -1 - -3 =   3 - 1  = 2
-				else return -n.sub(*this);					//  1 -  3 = -(3 - 1) = 2
-			}
-			else if(n.less(*this))	// n 的绝对值小于 *this 的绝对值
-			{
-				if (sign == '-') return -sub(n);			// -3 - -1 = -3 + 1 = -(3 - 1) = -2
-				else return sub(n);							//  3 -  1 = 2
-			}
-			else					// 绝对值相等		
-			{
-				return Integer("0", '+');					// -x - -x  或 x - x
-			}
-		}
+		if (n.sign == '-')	return deploy(+n);		// x - -3 = x + 3
+		else				return deploy(-n);		// x - +3 = x - 3
 	}
 
 	/**
@@ -417,9 +404,37 @@ public:
 
 	Integer& operator/=(const Integer& n)
 	{
-		*this = *this / n;
+		*this = *this + n;
 
 		return *this;
+	}
+
+	Integer& operator++()
+	{
+		*this += 1;
+		return *this;
+	}
+
+	Integer& operator++(int)
+	{
+		Integer tInt(*this);
+		*this += 1;
+
+		return tInt;
+	}
+
+	Integer& operator--()
+	{
+		*this -= 1;
+		return *this;
+	}
+
+	Integer& operator--(int)
+	{
+		Integer tInt(*this);
+		*this += 1;
+
+		return tInt;
 	}
 
 
@@ -503,8 +518,7 @@ public:
 
 	bool operator&&(const Integer& n)const noexcept
 	{
-		if (*this == 0) return false;
-		else if (n == 0) return false;
+		if (*this == 0 || n == 0) return false;
 		else return true;
 	}
 
@@ -570,7 +584,7 @@ public:
 		std::reverse(str.begin(), str.end());
 
 		// 输出
-		os << (n.sign == '-' ? "-" : "") + str;
+		os << ((n.sign == '-' ? "-" : "") + str);
 
 		return os;
 	}
@@ -583,20 +597,14 @@ public:
 	}
 
 	// 一元正负号重载
-	friend Integer operator+(const Integer& n) noexcept
+	friend Integer operator+(const Integer& n)
 	{
-		Integer tInt(n);
-		tInt.sign = '+';
-
-		return tInt;
+		return Integer(n.num, '+');
 	}
 
-	friend Integer operator-(const Integer& n) noexcept
+	friend Integer operator-(const Integer& n)
 	{
-		Integer tInt(n);
-		tInt.sign = n < 0 ? '+' : '-';
-
-		return tInt;
+		return Integer(n.num, n.sign == '+' ? '-' : '+');
 	}
 
 
