@@ -15,7 +15,7 @@ class Integer
 private:
 	string num;					// 该数字的数值形式
 	char sign = '+';			// 该数字的符号 '+' '-'
-
+	using Int_type = __int64;
 	
 	/**
 	 * 此构造函数接收一个表示数字的字符串，一个该数字的符号
@@ -29,6 +29,7 @@ private:
 	 * 大数加法实现
 	 * 两数必须都为正数
 	 * 只做数值运算，不做符号运算
+	 * 运算结果永远为正
 	 */
 	Integer add(const Integer& n)const
 	{
@@ -58,6 +59,7 @@ private:
 	 * 大数减法实现
 	 * 被减数的绝对值必须大于减数的绝对值
 	 * 只做数值运算，不做符号运算
+	 * 运算结果永远为正
 	 */
 	Integer sub(const Integer& n)const
 	{
@@ -69,7 +71,7 @@ private:
 		int diff = 0;					// 某位的差
 		int borrow = 0;					// 借位
 
-		while (i < len1 && j < len2 )
+		while (i < len1 || j < len2 )
 		{
 			diff = (i < len1 ? tInt.num.at(i) : 0) - (j < len2 ? n.num.at(j) : 0) - borrow;
 			borrow = diff < 0 ? 1 : 0;
@@ -97,6 +99,8 @@ private:
 	 */
 	Integer mult(const Integer& n)const
 	{
+		if (*this == 0 || n == 0) return Integer(0);
+
 		const auto& one = num;
 		const auto& two = n.num;
 		const auto len1 = one.size();
@@ -166,7 +170,7 @@ private:
 			}
 			else if (n.less(*this))
 			{
-				if (sign == '+')	return sub(n);
+				if (sign == '+')	return  sub(n);
 				else				return -sub(n);
 			}
 			else
@@ -181,17 +185,27 @@ private:
 	/**
 	 * 比较该数的绝对值是否小于参数的绝对值
 	 */
-	bool less(const Integer& n)const noexcept
+	bool less(const Integer& n)const
 	{
 		if (num.size() < n.num.size())		return true;
 		else if (num.size() > n.num.size()) return false;
-		else								return num < n.num;
+		else
+		{
+			// 逆序从高位开始比较
+			for (int i = num.size() - 1; i >= 0; --i)
+			{
+				if (num.at(i) == n.num.at(i)) continue;
+				else if (num.at(i) < n.num.at(i)) return true;
+				else return false;
+			}
+			return false;
+		}
 	}
 
 
 public:
 	// 默认/单参数构造函数
-	Integer(int x = 0)
+	Integer(Int_type x = 0)
 	{
 		sign = x < 0 ? '-' : '+';
 		x = abs(x);
@@ -288,7 +302,7 @@ public:
 		if (this != &n)
 		{
 			num = std::move(n.num);
-			sign = std::move(sign);
+			sign = std::move(n.sign);
 		}
 
 		return *this;
@@ -300,22 +314,22 @@ public:
 
 
 	// 数值计算运算符重载
-	Integer operator+(int x)const
+	Integer operator+(Int_type x)const
 	{
 		return *this + Integer(x);
 	}
 
-	Integer operator-(int x)const
+	Integer operator-(Int_type x)const
 	{
 		return *this - Integer(x);
 	}
 
-	Integer operator*(int x)const
+	Integer operator*(Int_type x)const
 	{
 		return *this * Integer(x);
 	}
 
-	Integer operator/(int x)const
+	Integer operator/(Int_type x)const
 	{
 		return *this / Integer(x);
 	}
@@ -353,28 +367,28 @@ public:
 		return div(n);
 	}
 
-	Integer& operator+=(int x)
+	Integer& operator+=(Int_type x)
 	{
 		*this += Integer(x);
 
 		return *this;
 	}
 
-	Integer& operator-=(int x)
+	Integer& operator-=(Int_type x)
 	{
 		*this -= Integer(x);
 
 		return *this;
 	}
 
-	Integer& operator*=(int x)
+	Integer& operator*=(Int_type x)
 	{
 		*this *= Integer(x);
 
 		return *this;
 	}
 
-	Integer& operator/=(int x)
+	Integer& operator/=(Int_type x)
 	{
 		*this /= Integer(x);
 
@@ -415,7 +429,7 @@ public:
 		return *this;
 	}
 
-	Integer& operator++(int)
+	Integer operator++(int)
 	{
 		Integer tInt(*this);
 		*this += 1;
@@ -429,7 +443,7 @@ public:
 		return *this;
 	}
 
-	Integer& operator--(int)
+	Integer operator--(int)
 	{
 		Integer tInt(*this);
 		*this += 1;
@@ -438,41 +452,44 @@ public:
 	}
 
 
-	// 关系运算符重载
-	bool operator==(int x)const noexcept
+	// 比较运算符重载
+	bool operator==(Int_type x)const noexcept
 	{
 		return *this == Integer(x);
 	}
 
-	bool operator!=(int x)const noexcept
+	bool operator!=(Int_type x)const noexcept
 	{
 		return *this != Integer(x);
 	}
 
-	bool operator<=(int x)const noexcept
+	bool operator<=(Int_type x)const noexcept
 	{
 		return *this <= Integer(x);
 	}
 
-	bool operator>=(int x)const noexcept
+	bool operator>=(Int_type x)const noexcept
 	{
 		return *this >= Integer(x);
 	}
 
-	bool operator<(int x)const noexcept
+	bool operator<(Int_type x)const noexcept
 	{
 		return *this < Integer(x);
 	}
 
-	bool operator>(int x)const noexcept
+	bool operator>(Int_type x)const noexcept
 	{
 		return *this > Integer(x);
 	}
 
 	bool operator==(const Integer& n)const noexcept
 	{
-		if (sign == n.sign && num == n.num) return true;
-		return false;
+		// +0 == -0
+		if (num.size() == 1 && num.back() == 0 &&
+			n.num.size() == 1 && n.num.back() == 0)	return true;
+		else if (sign == n.sign && num == n.num)	return true;
+		else										return false;
 	}
 
 	bool operator!=(const Integer& n)const noexcept
@@ -506,12 +523,12 @@ public:
 	}
 
 	// 逻辑运算符重载
-	bool operator&&(int x)const noexcept
+	bool operator&&(Int_type x)const noexcept
 	{
 		return *this && Integer(x);
 	}
 
-	bool operator||(int x)const noexcept
+	bool operator||(Int_type x)const noexcept
 	{
 		return *this || Integer(x);
 	}
@@ -531,7 +548,7 @@ public:
 	/**********************************************************
 	 *                       友元函数                         *
 	 **********************************************************/
-	// >> <<运算符重载
+	// 流运算符重载
 	friend istream& operator>>(istream& in, Integer& n)
 	{
 		string str;
@@ -609,22 +626,22 @@ public:
 
 
 	// 数值计算运算符重载
-	friend Integer operator+(int x,const Integer& n)
+	friend Integer operator+(Int_type x,const Integer& n)
 	{
 		return n + x;
 	}
 
-	friend Integer operator-(int x, const Integer& n)
+	friend Integer operator-(Int_type x, const Integer& n)
 	{
 		return n - x;
 	}
 
-	friend Integer operator*(int x, const Integer& n)
+	friend Integer operator*(Int_type x, const Integer& n)
 	{
 		return n * x;
 	}
 	
-	friend Integer operator/(int x, const Integer& n)
+	friend Integer operator/(Int_type x, const Integer& n)
 	{
 		return n / x;
 	}
