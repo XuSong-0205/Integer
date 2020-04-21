@@ -15,7 +15,7 @@ class Integer
 private:
 	string num;					// 该数字的数值形式
 	char sign = '+';			// 该数字的符号 '+' '-'
-	using Int_type = __int64;
+	using Int_type = __int64;	// 接受的最大整型的类型
 	
 	/**
 	 * 此构造函数接收一个表示数字的字符串，一个该数字的符号
@@ -140,12 +140,133 @@ private:
 	}
 
 	/**
+	 * 大数除法的辅助函数
+	 * a b 均为逆序存储的数字数组
+	 * 即低位在前，高位在后
+	 */
+	int help_sub(vector<int>& a, const vector<int>& b,const int startb)const
+	{
+		const int lena = a.size();						// a 的长度 真实的长度 也是实际要进行计算的长度
+		const int lenb = b.size() - startb;				// b 从 startb 到结尾的长度 此长度为实际要进行计算的长度
+		if (lena < lenb) return -1;						// 若 a小于b ，则返回 -1
+
+		if (lena == lenb)								// 长度相等，进行大小比较
+		{
+			int i = lena - 1;
+			int j = lenb - 1;
+			while (i >= 0 || j >= 0)
+			{
+				if (a.at(i) > b.at(j + startb)) break;
+				else if (a.at(i) < b.at(j + startb)) return -1;	// a小于b ，返回 -1
+
+				--i;
+				--j;
+			}
+		}
+
+		int ia = 0;
+		int ib = startb;
+		int diff = 0;
+		const int tlb = b.size();
+		// 因为是逆序存储的，所以需要从前往后减
+		while (ia < lena || ib < tlb)
+		{
+			diff = (ia < lena ? a.at(ia) : 0) - (ib < tlb ? b.at(ib) : 0);
+			a.at(ia) = diff < 0 ? 10 + diff : diff;
+			// 因为a一定大于等于b，若有借位则一定还在数组下标范围内，保证不会越界
+			if (diff < 0) --a.at(ia + 1);
+
+			++ia;
+			++ib;
+		}
+
+		for (int i = lena - 1; i >= 0; --i)
+		{
+			if (a.at(i)) return i + 1;		// 返回差的位数
+			else a.pop_back();				// 去掉最高位的 0
+		}
+
+		return 0;							// 两数相等返回 0 a此时也为 0
+	}
+
+	/**
 	 * 大数的除法实现
 	 * 两数的正负可是任意的
+	 * 可选择返回商或余数
+	 * 默认返回商
+	 * 若指定第二个参数为 false 则返回余数
 	 */
-	Integer div(const Integer& n)const
+	Integer div(const Integer& n,bool isMer=true)const
 	{
+		// 判断是否有数字为 0
+		if (*this == 0) return Integer(0);
+		else if (n == 0) throw "divide by zero";
 
+		// 被除数与除数的大小判断
+		if (less(n)) return isMer ? Integer(0) : *this;
+
+		// 到这里说明被除数是大于除数的，则商至少为1
+		// 注意，下面的 被除数 除数 商 均为倒序存储的
+
+		const int lent = num.size() - n.num.size();			// 被除数与除数的长度差
+		vector<int> na(num.begin(), num.end());				// 被除数
+		// 直接将 nb 分配为和 na 一样长 相当于将它扩大了 10^lent 倍
+		vector<int> nb(na.size(), 0);						// 除数
+		vector<int> nr(lent + 1, 0);						// 商
+		
+		// 初始化 nb 的值
+		for (size_t i = lent; i < nb.size(); ++i)
+		{
+			nb.at(i) = n.num.at(i - lent);
+		}
+
+		// 被除数与除数的长度差为 0 也可以减，所以是循环进行 lent+1 次
+		int lenb = 0;
+		for (int i = 0; i <= lent; ++i)
+		{
+			// 两数相减，判断是否足够减
+			int temp = 0;
+			while ((temp = help_sub(na, nb,lenb)) >= 0)
+			{
+				// 该位的商增加一 商是逆序存储的
+				++nr.at(lent - i);
+			}
+
+			// 该位减完，减数去掉一位(减数减少十倍)
+			++lenb;
+		}
+
+		// 得出计算结果
+		if (isMer)
+		{
+			string mer;						// 存储商
+			int index = 0;
+			for (index = nr.size() - 1; index >= 0; --index)
+			if (nr.at(index)) break;		// 低位在前，所以从后往前找第一个非 0 的值，即是结果的开始位置
+
+			// 任然按逆序将商存入 string
+			for (int i = 0; i <= index; ++i) mer += nr.at(i);
+
+			// 计算符号
+			const char ch = sign == n.sign ? '+' : '-';
+
+			// 返回构造结果
+			return Integer(std::move(mer), ch);
+		}
+		else
+		{
+			if (na.empty()) return Integer(0);		// 余数为 0
+
+			// 逆序存储余数
+			string ram;								// 存储余数
+			for (size_t i = 0; i < na.size(); ++i)	ram += na.at(i);
+
+			// 计算符号	余数的符号与被除数的符号相同
+			const char ch = sign;
+
+			// 返回构造结果
+			return Integer(std::move(ram), ch);
+		}
 	}
 
 	/**
@@ -334,6 +455,11 @@ public:
 		return *this / Integer(x);
 	}
 
+	Integer operator%(Int_type x)const
+	{
+		return *this % Integer(x);
+	}
+
 	/**
 	 * 大数加法
 	 */
@@ -367,6 +493,14 @@ public:
 		return div(n);
 	}
 
+	/**
+	 * 大数取余
+	 */
+	Integer operator%(const Integer& n)const
+	{
+		return div(n, false);
+	}
+
 	Integer& operator+=(Int_type x)
 	{
 		*this += Integer(x);
@@ -395,6 +529,13 @@ public:
 		return *this;
 	}
 
+	Integer& operator%=(Int_type x)
+	{
+		*this %= Integer(x);
+
+		return *this;
+	}
+
 	Integer& operator+=(const Integer& n)
 	{
 		*this = *this + n;
@@ -418,7 +559,14 @@ public:
 
 	Integer& operator/=(const Integer& n)
 	{
-		*this = *this + n;
+		*this = *this / n;
+
+		return *this;
+	}
+
+	Integer& operator%=(const Integer& n)
+	{
+		*this = *this % n;
 
 		return *this;
 	}
@@ -426,6 +574,7 @@ public:
 	Integer& operator++()
 	{
 		*this += 1;
+
 		return *this;
 	}
 
@@ -440,6 +589,7 @@ public:
 	Integer& operator--()
 	{
 		*this -= 1;
+
 		return *this;
 	}
 
@@ -545,9 +695,11 @@ public:
 		else return n != 0;
 	}
 
+
 	/**********************************************************
 	 *                       友元函数                         *
 	 **********************************************************/
+
 	// 流运算符重载
 	friend istream& operator>>(istream& in, Integer& n)
 	{
@@ -644,6 +796,11 @@ public:
 	friend Integer operator/(Int_type x, const Integer& n)
 	{
 		return n / x;
+	}
+
+	friend Integer operator%(Int_type x, const Integer& n)
+	{
+		return n % x;
 	}
 
 };
