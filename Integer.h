@@ -335,8 +335,14 @@ private:
 
 
 public:
-	// 默认/单参数构造函数
-	Integer(Int_type x = 0)
+	// 默认构造函数
+	Integer()noexcept :sign('+') {}
+	
+	/**
+	 * 单参构造函数
+	 * 可进行隐式转换
+	 */
+	Integer(Int_type x)
 	{
 		sign = x < 0 ? '-' : '+';
 		x = abs(x);
@@ -428,7 +434,7 @@ public:
 	}
 
 	// 移动赋值运算符
-	Integer operator=(Integer&& n)noexcept
+	Integer operator=(Integer&& n)
 	{
 		if (this != &n)
 		{
@@ -614,32 +620,32 @@ public:
 
 
 	// 比较运算符重载
-	bool operator==(Int_type x)const noexcept
+	bool operator==(Int_type x)const
 	{
 		return *this == Integer(x);
 	}
 
-	bool operator!=(Int_type x)const noexcept
+	bool operator!=(Int_type x)const
 	{
 		return *this != Integer(x);
 	}
 
-	bool operator<=(Int_type x)const noexcept
+	bool operator<=(Int_type x)const
 	{
 		return *this <= Integer(x);
 	}
 
-	bool operator>=(Int_type x)const noexcept
+	bool operator>=(Int_type x)const
 	{
 		return *this >= Integer(x);
 	}
 
-	bool operator<(Int_type x)const noexcept
+	bool operator<(Int_type x)const
 	{
 		return *this < Integer(x);
 	}
 
-	bool operator>(Int_type x)const noexcept
+	bool operator>(Int_type x)const
 	{
 		return *this > Integer(x);
 	}
@@ -658,19 +664,19 @@ public:
 		return !(*this == n);
 	}
 
-	bool operator<=(const Integer& n)const noexcept
+	bool operator<=(const Integer& n)const
 	{
 		if (*this == n) return true;
 		return *this < n;
 	}
 
-	bool operator>=(const Integer& n)const noexcept
+	bool operator>=(const Integer& n)const
 	{
 		if (*this == n) return true;
 		return n < *this;
 	}
 
-	bool operator<(const Integer& n)const noexcept
+	bool operator<(const Integer& n)const
 	{
 		if (sign == '-' && n.sign == '+')		return true;
 		else if (sign == '-' && n.sign == '-')	return n.less(*this);
@@ -678,29 +684,29 @@ public:
 		else									return false;
 	}
 
-	bool operator>(const Integer& n)const noexcept
+	bool operator>(const Integer& n)const
 	{
 		return n < *this;
 	}
 
 	// 逻辑运算符重载
-	bool operator&&(Int_type x)const noexcept
+	bool operator&&(Int_type x)const
 	{
 		return *this && Integer(x);
 	}
 
-	bool operator||(Int_type x)const noexcept
+	bool operator||(Int_type x)const
 	{
 		return *this || Integer(x);
 	}
 
-	bool operator&&(const Integer& n)const noexcept
+	bool operator&&(const Integer& n)const
 	{
 		if (*this == 0 || n == 0) return false;
 		else return true;
 	}
 
-	bool operator||(const Integer& n)const noexcept
+	bool operator||(const Integer& n)const
 	{
 		if (*this != 0) return true;
 		else return n != 0;
