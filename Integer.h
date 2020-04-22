@@ -26,6 +26,15 @@ private:
 	Integer(const string& s1, char ch) :num(s1), sign(ch) {}
 
 	/**
+	 * 参数同上，为它的右值参数形式
+	 */
+	Integer(string&& s1, char ch)
+	{
+		num = std::move(s1);
+		sign = std::move(ch);
+	}
+
+	/**
 	 * 大数加法实现
 	 * 两数必须都为正数
 	 * 只做数值运算，不做符号运算
@@ -143,12 +152,14 @@ private:
 	 * 大数除法的辅助函数
 	 * a b 均为逆序存储的数字数组
 	 * 即低位在前，高位在后
+	 * 若 a的绝对值大于b的绝对值
+	 * 即 a能够减去b，则返回 true,否则返回 false
 	 */
-	int help_sub(vector<int>& a, const vector<int>& b,const int startb)const
+	bool help_sub(vector<int>& a, const vector<int>& b,const int startb)const
 	{
 		const int lena = a.size();						// a 的长度 真实的长度 也是实际要进行计算的长度
 		const int lenb = b.size() - startb;				// b 从 startb 到结尾的长度 此长度为实际要进行计算的长度
-		if (lena < lenb) return -1;						// 若 a小于b ，则返回 -1
+		if (lena < lenb) return false;					// 若 a小于b ，则返回 false
 
 		if (lena == lenb)								// 长度相等，进行大小比较
 		{
@@ -157,7 +168,7 @@ private:
 			while (i >= 0 || j >= 0)
 			{
 				if (a.at(i) > b.at(j + startb)) break;
-				else if (a.at(i) < b.at(j + startb)) return -1;	// a小于b ，返回 -1
+				else if (a.at(i) < b.at(j + startb)) return false;	// a小于b ，返回 false
 
 				--i;
 				--j;
@@ -182,11 +193,11 @@ private:
 
 		for (int i = lena - 1; i >= 0; --i)
 		{
-			if (a.at(i)) return i + 1;		// 返回差的位数
+			if (a.at(i)) return true;		// 返回结果 true
 			else a.pop_back();				// 去掉最高位的 0
 		}
 
-		return 0;							// 两数相等返回 0 a此时也为 0
+		return true;						// 两数相等返回 true
 	}
 
 	/**
@@ -225,8 +236,7 @@ private:
 		for (int i = 0; i <= lent; ++i)
 		{
 			// 两数相减，判断是否足够减
-			int temp = 0;
-			while ((temp = help_sub(na, nb,lenb)) >= 0)
+			while (help_sub(na, nb, lenb))
 			{
 				// 该位的商增加一 商是逆序存储的
 				++nr.at(lent - i);
@@ -418,7 +428,7 @@ public:
 	}
 
 	// 移动赋值运算符
-	Integer operator=(Integer&& n)
+	Integer operator=(Integer&& n)noexcept
 	{
 		if (this != &n)
 		{
@@ -571,6 +581,7 @@ public:
 		return *this;
 	}
 
+	// 一元自增自减运算符重载
 	Integer& operator++()
 	{
 		*this += 1;

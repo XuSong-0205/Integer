@@ -52,11 +52,11 @@ do															\
 
 
 /**
- * 进行相应的函数测试
+ * 进行相应的二元运算符测试
  * 并判断计算是否正确
  * 进行相应的数据记录
  */
-#define Test_oper(fun)										\
+#define Test_binary(fun)									\
 do															\
 {															\
 	for (int i = 0; i < TEST_NUM; ++i)						\
@@ -144,6 +144,7 @@ do															\
 
 
 /**
+ * 二元运算符测试
  * 测试案列的外部接口
  * 进行各种所需数据的声明
  * 调用前面的宏函数进行测试工作
@@ -161,12 +162,14 @@ do															\
 															\
 	Test_start();											\
 	Test_data();											\
-	Test_oper(fun);											\
+	Test_binary(fun);										\
 	Test_mes();												\
 	Test_err();												\
 	Test_end();												\
 															\
 } while (false);
+
+
 
 int main()
 {
@@ -193,8 +196,7 @@ int main()
 	Test_fun(&&);
 	Test_fun(||);
 
-	// 一元运算符测试
-
+	// 一元运算符不测试了，肯定也没啥问题。。。
 
 
 
