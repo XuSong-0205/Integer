@@ -613,7 +613,7 @@ public:
 	Integer operator--(int)
 	{
 		Integer tInt(*this);
-		*this += 1;
+		*this -= 1;
 
 		return tInt;
 	}
@@ -725,6 +725,7 @@ public:
 		if (str.empty()) return in;
 
 		bool isNum = true;
+		n.num.clear();
 		if (str.at(0) >= '0' && str.at(0) <= '9')
 		{
 			n.num += str.at(0) - '0';
@@ -753,11 +754,15 @@ public:
 			isNum = false;
 		}
 
-		// 若不是数字，清空
+		// 若不是数字，清空,重置符号
 		if (!isNum)
 		{
-			n.num.clear();
 			n.sign = '+';
+		}
+		else
+		{
+			// 反转为逆序存储
+			std::reverse(n.num.begin(), n.num.end());
 		}
 
 		return in;
