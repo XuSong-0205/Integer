@@ -108,7 +108,7 @@ private:
 	 */
 	Integer mult(const Integer& n)const
 	{
-		if (*this == 0 || n == 0) return Integer(0);
+		if ((*this == 0) || (n == 0)) return Integer(0);
 
 		const auto& one = num;
 		const auto& two = n.num;
@@ -316,7 +316,7 @@ private:
 	/**
 	 * 比较该数的绝对值是否小于参数的绝对值
 	 */
-	bool less(const Integer& n)const
+	bool less_abs(const Integer& n)const
 	{
 		if (num.size() < n.num.size())		return true;
 		else if (num.size() > n.num.size()) return false;
@@ -451,81 +451,80 @@ public:
 
 
 	// 算术运算符重载
-	
-	/**
-	 * 大数加法
-	 */
-	Integer operator+(const Integer& n)const 
-	{
-		return deploy(n);
-	}
+	///**
+	// * 大数加法
+	// */
+	//Integer operator+(const Integer& n)const 
+	//{
+	//	return deploy(n);
+	//}
 
-	/**
-	 * 大数减法
-	 */
-	Integer operator-(const Integer& n)const
-	{
-		if (n.sign == '-')	return deploy(+n);		// x - -3 = x + 3
-		else				return deploy(-n);		// x - +3 = x - 3
-	}
+	///**
+	// * 大数减法
+	// */
+	//Integer operator-(const Integer& n)const
+	//{
+	//	if (n.sign == '-')	return deploy(+n);		// x - -3 = x + 3
+	//	else				return deploy(-n);		// x - +3 = x - 3
+	//}
 
-	/**
-	 * 大数乘法
-	 */
-	Integer operator*(const Integer& n)const
-	{
-		return mult(n);
-	}
+	///**
+	// * 大数乘法
+	// */
+	//Integer operator*(const Integer& n)const
+	//{
+	//	return mult(n);
+	//}
 
-	/**
-	 * 大数除法
-	 */
-	Integer operator/(const Integer& n)const
-	{
-		return div(n);
-	}
+	///**
+	// * 大数除法
+	// */
+	//Integer operator/(const Integer& n)const
+	//{
+	//	return div(n);
+	//}
 
-	/**
-	 * 大数取余
-	 */
-	Integer operator%(const Integer& n)const
-	{
-		return div(n, false);
-	}
+	///**
+	// * 大数取余
+	// */
+	//Integer operator%(const Integer& n)const
+	//{
+	//	return div(n, false);
+	//}
 
-	// 复合赋值运算符重载
 	Integer& operator+=(const Integer& n)
 	{
-		*this = *this + n;
+		*this = deploy(n);
 
 		return *this;
 	}
 
 	Integer& operator-=(const Integer& n)
 	{
-		*this = *this - n;
-		
+		if (n.sign == '-')	*this = deploy(+n);		// x - -3 = x + 3
+		else				*this = deploy(-n);		// x - +3 = x - 3
+
 		return *this;
 	}
 
 	Integer& operator*=(const Integer& n)
 	{
-		*this = *this * n;
+		*this = mult(n);
 
 		return *this;
 	}
 
 	Integer& operator/=(const Integer& n)
 	{
-		*this = *this / n;
-		
+		*this = div(n);
+
 		return *this;
 	}
 
 	Integer& operator%=(const Integer& n)
 	{
-		*this = *this % n;
-		
+		*this = div(n, false);
+
 		return *this;
 	}
 
@@ -560,9 +559,10 @@ public:
 		return tInt;
 	}
 
-
-	// 比较运算符重载
-	bool operator==(const Integer& n)const noexcept
+	/**
+	 * 判断两数是否相等
+	 */
+	bool equal(const Integer& n)const
 	{
 		// +0 == -0
 		if (num.size() == 1 && num.back() == 0 &&
@@ -571,53 +571,114 @@ public:
 		else										return false;
 	}
 
-	bool operator!=(const Integer& n)const noexcept
+	/**
+	 * 比较 *this 是否小于 n
+	 */
+	bool less(const Integer& n)const
 	{
-		return !(*this == n);
+		if (sign == '-' && n.sign == '+')		return true;
+		else if (sign == '-' && n.sign == '-')	return n.less_abs(*this);
+		else if (sign == '+' && n.sign == '+')	return less_abs(n);
+		else									return false;
 	}
 
-	bool operator<=(const Integer& n)const
-	{
-		if (*this == n) return true;
-		return *this < n;
-	}
+	//// 比较运算符重载
+	//bool operator==(const Integer& n)const noexcept
+	//{
+	//	// +0 == -0
+	//	if (num.size() == 1 && num.back() == 0 &&
+	//		n.num.size() == 1 && n.num.back() == 0)	return true;
+	//	else if (sign == n.sign && num == n.num)	return true;
+	//	else										return false;
+	//}
 
-	bool operator>=(const Integer& n)const
-	{
-		if (*this == n) return true;
-		return n < *this;
-	}
+	//bool operator!=(const Integer& n)const noexcept
+	//{
+	//	return !(*this == n);
+	//}
 
-	bool operator<(const Integer& n)const
+	//bool operator<=(const Integer& n)const
+	//{
+	//	if (*this == n) return true;
+	//	return *this < n;
+	//}
+
+	//bool operator>=(const Integer& n)const
+	//{
+	//	if (*this == n) return true;
+	//	return n < *this;
+	//}
+
+	/*bool operator<(const Integer& n)const
 	{
 		if (sign == '-' && n.sign == '+')		return true;
 		else if (sign == '-' && n.sign == '-')	return n.less(*this);
 		else if (sign == '+' && n.sign == '+')	return less(n);
 		else									return false;
-	}
+	}*/
 
-	bool operator>(const Integer& n)const
-	{
-		return n < *this;
-	}
+	//bool operator>(const Integer& n)const
+	//{
+	//	return n < *this;
+	//}
 
-	// bool 类型转换
+	// bool 类型的显示转换
 	explicit operator bool()const
 	{
 		return *this != 0;
-	}
-	
+	} 
 
 	/**********************************************************
 	 *                       友元函数                         *
 	 **********************************************************/
+
+
+	friend Integer operator+=(Int_type x, const Integer& n)
+	{
+		Integer ans(x);
+		ans += n;
+		return ans;
+	}
+
+	friend Integer operator-=(Int_type x, const Integer& n)
+	{
+		Integer ans(x);
+		ans -= n;
+		return ans;
+	}
+
+	friend Integer operator*=(Int_type x, const Integer& n)
+	{
+		Integer ans(x);
+		ans *= n;
+		return ans;
+	}
+
+	friend Integer operator/=(Int_type x, const Integer& n)
+	{
+		Integer ans(x);
+		ans /= n;
+		return ans;
+	}
+
+	friend Integer operator%=(Int_type x, const Integer& n)
+	{
+		Integer ans(x);
+		ans %= n;
+		return ans;
+	}
+
 
 	// 流运算符重载
 	friend istream& operator>>(istream& in, Integer& n)
 	{
 		string str;
 		in >> str;
-		if (str.empty()) return in;
+		if (str.empty())
+		{
+			in.clear();
+			return in;
+		}
 
 		bool isNum = true;
 		n.num.clear();
@@ -649,15 +710,14 @@ public:
 			isNum = false;
 		}
 
-		// 若不是数字，清空,重置符号
+		// 若不是数字，清空
 		if (!isNum)
 		{
 			n.sign = '+';
 		}
 		else
 		{
-			// 反转为逆序存储
-			std::reverse(n.num.begin(), n.num.end());
+			reverse(n.num.begin(), n.num.end());
 		}
 
 		return in;
@@ -675,13 +735,6 @@ public:
 		return os;
 	}
 
-
-	// 一元逻辑运算符重载
-	friend bool operator!(const Integer& n) noexcept
-	{
-		return n == 0;
-	}
-
 	// 一元正负号重载
 	friend Integer operator+(const Integer& n)
 	{
@@ -693,31 +746,95 @@ public:
 		return Integer(n.num, n.sign == '+' ? '-' : '+');
 	}
 
-
-	// 数值计算运算符重载
-	friend Integer operator+(Int_type x,const Integer& n)
-	{
-		return Integer(x) + n;
-	}
-
-	friend Integer operator-(Int_type x, const Integer& n)
-	{
-		return Integer(x) - n;
-	}
-
-	friend Integer operator*(Int_type x, const Integer& n)
-	{
-		return Integer(x) * n;
-	}
-	
-	friend Integer operator/(Int_type x, const Integer& n)
-	{
-		return Integer(x) / n;
-	}
-
-	friend Integer operator%(Int_type x, const Integer& n)
-	{
-		return Integer(x) % n;
-	}
-
 };
+
+
+
+
+/**********************************************************
+ *                       非成员函数                       *
+ **********************************************************/
+
+/**
+ * 大数加法
+ */
+Integer operator+(const Integer& n0,const Integer& n1)
+{
+	Integer ans = n0;
+	ans += n1;
+	return ans;
+}
+
+/**
+ * 大数减法
+ */
+Integer operator-(const Integer& n0,const Integer& n1)
+{
+	Integer ans = n0;
+	ans -= n1;
+	return ans;
+}
+
+/**
+ * 大数乘法
+ */
+Integer operator*(const Integer& n0,const Integer& n1)
+{
+	Integer ans = n0;
+	ans *= n1;
+	return ans;
+}
+
+/**
+ * 大数除法
+ */
+Integer operator/(const Integer& n0,const Integer& n1)
+{
+	Integer ans = n0;
+	ans /= n1;
+	return ans;
+}
+
+/**
+ * 大数取余
+ */
+Integer operator%(const Integer& n0,const Integer& n1)
+{
+	Integer ans = n0;
+	ans %= n1;
+	return ans;
+}
+
+
+// 比较运算符重载
+bool operator==(const Integer& n0,const Integer& n1)
+{
+	return n0.equal(n1);
+}
+
+bool operator!=(const Integer& n0,const Integer& n1)
+{
+	return !(n0 == n1);
+}
+
+bool operator<=(const Integer& n0,const Integer& n1)
+{
+	if (n0 == n1) return true;
+	return n0 < n1;
+}
+
+bool operator>=(const Integer& n0,const Integer& n1)
+{
+	if (n0 == n1) return true;
+	return n1 < n0;
+}
+
+bool operator<(const Integer& n0,const Integer& n1)
+{
+	return n0.less(n1);
+}
+
+bool operator>(const Integer& n0,const Integer& n1)
+{
+	return n1 < n0;
+}

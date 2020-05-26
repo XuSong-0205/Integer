@@ -6,6 +6,7 @@
 using std::default_random_engine;				// 随机数引擎
 using std::uniform_int_distribution;			// 随机数分布类型
 
+#define TEST_STYLE 0
 constexpr int TEST_NUM = 100;					// 测试用例的数量
 constexpr int TEST_RANGE = 400000000;			// 测试用例的数值范围
 using test_type=__int64;						// 用来检测案例是否正确的辅助类型
@@ -65,8 +66,13 @@ do															\
 		{													\
 			const auto ti=tvec.at(i);						\
 			const auto tj=tvec.at(j);						\
-			const auto ans1 =								\
+			auto ans1 = Integer();							\
+			if(TEST_STYLE == 0)								\
+			ans1 =											\
 			(Integer(tvec.at(i)) fun Integer(tvec.at(j)));	\
+			else if(TEST_STYLE == 1)						\
+			ans1 =											\
+			(Integer(tvec.at(i)) fun tvec.at(j));			\
 			/*注意！下面若是赋值运算符，将修改测试数据！*/	\
 			const auto ans2 =								\
 			(tvec.at(i) fun tvec.at(j));					\
@@ -79,7 +85,7 @@ do															\
 				trueData.push_back(ans2);					\
 			}												\
 			/*修改回原来的数据*/							\
-			tvec.at(i)=ti;									\
+			tvec.at(i) = ti;								\
 		}													\
 	}														\
 } while (false);
@@ -198,7 +204,13 @@ int main()
 
 	// 一元运算符不测试了，肯定也没啥问题。。。
 
+	Integer i0 = 123456;
+	cout << 3 + i0 << endl;
+	cout << 6 - i0 << endl;
+	cout << 13 % Integer(5) << endl;
+	cout << (i0 == 3) << endl;
 
+	system("pause");
 
 	return 0;
 }
